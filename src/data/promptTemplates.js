@@ -480,48 +480,78 @@ Key close-up detail: ${profile.closeup}.`;
 Total duration: ${videoDuration}s. Active scene: ${activeTime}s. Final ${silentEnding}s: COMPLETE SILENCE.
 Narration target: ${charMin}-${charMax} chars per part. Speech speed: ~${speechSpeed} chars/sec.`;
 
-  const part1 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music.
+  // Randomly choose: narration mode or dialogue mode
+  const isDialogueMode = Math.random() > 0.5;
+  const mode = isDialogueMode ? 'dialogue' : 'narration';
+
+  // Combat scene inserts (always included)
+  const combatScene1 = weapon
+    ? `${weapon.name} system activates — mechanical components lock into position, power systems surge. The moment before engagement. Tension without resolution.`
+    : `Military systems activate — mechanical precision, power surge through hardware. The moment before engagement.`;
+  const combatScene2 = weapon
+    ? `${weapon.name} fires / launches / engages. The system performs with brutal mechanical precision. Impact shown through instruments, data readouts, and the reactions of personnel — not through direct violence. Physics doing what physics does. The power of this nation's defense technology on full display.`
+    : `The system engages with devastating mechanical precision. Impact registered on instruments. The quiet power of a nation that built this technology.`;
+
+  // Patriotic undertone phrases (subtle, woven into scene descriptions)
+  const patrioticNote = `The weight of protecting this nation rests on this crew. They carry it without complaint. This is what they trained for. This is what they chose.`;
+
+  // Audio block — different for narration vs dialogue
+  let audio1, audio2;
+  if (isDialogueMode) {
+    // Dialogue mode: the protagonist speaks directly
+    audio1 = `Dialogue:\n- ${profile.face}, ${profile.body}: "${narration1}"`;
+    audio2 = `Dialogue:\n- ${profile.face}, ${profile.body}: "${narration2}"`;
+  } else {
+    // Narration mode: external narrator voice
+    audio1 = `Narration:\n- Japanese male narrator, 40s, calm, almost cold voice (SAME voice in Part 1 and Part 2): "${narration1}"`;
+    audio2 = `Narration:\n- Japanese male narrator, 40s, calm, almost cold voice (SAME voice as Part 1): "${narration2}"`;
+  }
+
+  const part1 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD. No subtitles. No background music.
 
 Characters (identical in Part 1 and Part 2):
 ${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
-${weaponBlock ? '\n' + weapon.detail : ''}
+${weapon ? '\n' + weapon.detail : ''}
 
 COLOR GRADE: ${colorDesc}
 
-${setting || theme.title}. ${camera1}
+${theme.title}. ${camera1}
 
-(0:00-0:04) Exterior establishing shot. ${weapon ? weapon.name + " system visible in detail, " : ""}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Standing / seated at station. Professional calm.
+(0:00-0:04) Exterior establishing shot. ${weapon ? weapon.name + " system visible in detail, " : ""}operational environment at full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Professional calm. ${patrioticNote}
 
-(0:04-0:${String(activeTime).padStart(2,'0')}) Interior shot. ${profile.closeup}. Equipment detail fills background — every switch, gauge, display rendered precisely. The ${theme.protagonist} reads data. Something is changing.
+(0:04-0:08) ${combatScene1} Interior shot. ${profile.closeup}. Equipment detail fills background. The ${theme.protagonist} reads data. Something is changing. Tension builds.
 
-(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No narration. Camera slowly pushes in on the ${theme.protagonist}'s face. Only ambient sound — machinery hum, ocean, wind.
+(0:08-0:${String(activeTime).padStart(2,'0')}) The moment of action. ${combatScene2}
 
-Narration:
-- Japanese male narrator, 40s, calm, almost cold: "${narration1}"`;
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No sound. Camera on the ${theme.protagonist}'s face. Only ambient — machinery hum, ocean, wind.
 
-  const part2 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music. Continuing directly from Part 1.
+${audio1}`;
+
+  const part2 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD. No subtitles. No background music. Continuing directly from Part 1.
 
 Characters (identical to Part 1 — same face, same hair, same uniform):
 ${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
-${weaponBlock ? '\n' + weapon.detail : ''}
+${weapon ? '\n' + weapon.detail : ''}
 
 COLOR GRADE: ${colorDesc}
-IDENTICAL color palette and grading to Part 1.
+IDENTICAL to Part 1.
 
-${setting || theme.title}. ${camera2}
+${theme.title}. ${camera2}
 
-(0:00-0:04) The situation escalates. ${weapon ? weapon.name + " hardware detail fills the screen — " : "Military hardware fills the screen — "}close-up on mechanisms, surfaces, operational state. The system performs exactly as designed.
+(0:00-0:04) The aftermath. ${weapon ? weapon.name + " hardware detail — " : "Military hardware — "}systems cycling down, data streaming across displays. The engagement result visible on instruments. The crew processes what just happened.
 
-(0:04-0:${String(activeTime).padStart(2,'0')}) Cut back to the ${theme.protagonist}. ${profile.face} — unchanged. ${profile.body} — same as before. The data on the screen has changed. The mission status has changed. But the person has not.
+(0:04-0:08) Decisive combat moment. ${combatScene2} The full capability of this nation's defense demonstrated in seconds. Not aggression — precision. Not violence — physics.
 
-(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No narration. Camera holds on the ${theme.protagonist}. Complete silence. Slow fade to black.
+(0:08-0:${String(activeTime).padStart(2,'0')}) Cut back to the ${theme.protagonist}. ${profile.face} — unchanged. ${profile.body} — same. The data changed. The person did not. A professional who protects without being seen. ${patrioticNote}
 
-Narration:
-- Japanese male narrator, 40s, calm, almost cold: "${narration2}"`;
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. Complete silence. Slow fade to black.
+
+${audio2}`;
 
   return {
     part1,
     part2,
+    audioMode: mode,
     meta: {
       n1: { text: narration1, chars: n1Chars, speechTime: n1Speech },
       n2: { text: narration2, chars: n2Chars, speechTime: n2Speech },
