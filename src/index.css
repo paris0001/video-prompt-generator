@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --mil-bg: #0a0e0a;
+  --mil-panel: #0d1410;
+  --mil-border: #1a2e1a;
+  --mil-green: #00ff41;
+  --mil-green-dim: #0a3d0a;
+  --mil-green-mid: #1a5c1a;
+  --mil-amber: #ffb000;
+  --mil-red: #ff2020;
+  --mil-text: #8fbf8f;
+  --mil-text-dim: #3a5c3a;
+  --scanline: rgba(0, 255, 65, 0.03);
+}
+
+body {
+  background: var(--mil-bg);
+  font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
+}
+
+/* CRT scanline effect */
+.scanlines::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--scanline) 2px,
+    var(--scanline) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Corner brackets for tactical panels */
+.tactical-panel {
+  position: relative;
+}
+.tactical-panel::before,
+.tactical-panel::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--mil-green);
+  pointer-events: none;
+}
+.tactical-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.tactical-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}
+
+/* Glowing green text */
+.glow-green {
+  color: var(--mil-green);
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.4), 0 0 20px rgba(0, 255, 65, 0.1);
+}
+
+.glow-amber {
+  color: var(--mil-amber);
+  text-shadow: 0 0 6px rgba(255, 176, 0, 0.4), 0 0 20px rgba(255, 176, 0, 0.1);
+}
+
+.glow-red {
+  color: var(--mil-red);
+  text-shadow: 0 0 6px rgba(255, 32, 32, 0.4);
+}
+
+/* Blinking cursor for active states */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Pulse for status indicators */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 4px rgba(0, 255, 65, 0.4); }
+  50% { box-shadow: 0 0 12px rgba(0, 255, 65, 0.8); }
+}
+.pulse-dot {
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+/* Grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--mil-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--mil-green-dim);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mil-green-mid);
+}
