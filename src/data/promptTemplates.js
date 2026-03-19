@@ -480,62 +480,44 @@ Key close-up detail: ${profile.closeup}.`;
 Total duration: ${videoDuration}s. Active scene: ${activeTime}s. Final ${silentEnding}s: COMPLETE SILENCE.
 Narration target: ${charMin}-${charMax} chars per part. Speech speed: ~${speechSpeed} chars/sec.`;
 
-  const part1 = `Cinematic drama, 9:16 vertical, 4K,
-photorealistic. No text on screen. No HUD overlays.
-No subtitles. No graphics. Nothing on screen
-except the footage itself.
+  const part1 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music.
 
-${timingBlock}
-
-COLOR GRADE: ${colorDesc}
-
-${characterBlock}
-${weaponBlock}
-
-CAMERA SHOT 1: ${camera1}
-CAMERA SHOT 2: Interior transition — ${profile.closeup}. Same character, same uniform, same face. Instruments and equipment filling the frame around the character.
-
-LOCATION: ${theme.title}
-
-NARRATOR: Japanese male voice. 40s. Calm. Almost cold.
-
-#SCENE (0s-${activeTime}s)
-Exterior establishing shot. The hardware dominates the frame — ${weapon ? weapon.name + " system visible in detail, " : ""}operational environment shown in full scale. Then the camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Standing / seated at station. No hurry. Professional calm.
-
-[NARRATOR] (${n1Chars}字 / ~${n1Speech}s):
-「${narration1}」
-
-Interior shot. ${profile.closeup}. Equipment detail fills background — every switch, gauge, display rendered precisely. The ${theme.protagonist} reads data. Something is changing.
-
-FINAL ${silentEnding}s (${activeTime}s-${videoDuration}s): No narration. Camera slowly pushes in on the ${theme.protagonist}'s face. ${profile.face}. Silence. Only ambient sound — machinery hum, ocean, wind. Hold until cut.`;
-
-  const part2 = `Cinematic drama, 9:16 vertical, 4K,
-photorealistic. No text on screen. No HUD overlays.
-No subtitles. No graphics. Nothing on screen
-except the footage itself.
-
-${timingBlock}
+Characters (identical in Part 1 and Part 2):
+${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
+${weaponBlock ? '\n' + weapon.detail : ''}
 
 COLOR GRADE: ${colorDesc}
-IDENTICAL color palette and grading to part 1.
 
-${characterBlock}
-${weaponBlock}
+${setting || theme.title}. ${camera1}
 
-CAMERA: Continuation — SAME CHARACTER, SAME FACE, SAME UNIFORM as part 1. ${camera2}
-Then: the decisive moment. ${weapon ? "The " + weapon.name + " system in action — " : "System engaging — "}mechanical precision, industrial power, no dramatization. Just physics doing what physics does.
+(0:00-0:04) Exterior establishing shot. ${weapon ? weapon.name + " system visible in detail, " : ""}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Standing / seated at station. Professional calm.
 
-SAME NARRATOR: Japanese male voice. 40s.
+(0:04-0:${String(activeTime).padStart(2,'0')}) Interior shot. ${profile.closeup}. Equipment detail fills background — every switch, gauge, display rendered precisely. The ${theme.protagonist} reads data. Something is changing.
 
-#SCENE (0s-${activeTime}s)
-The situation escalates. ${weapon ? weapon.name + " hardware detail fills the screen — " : "Military hardware fills the screen — "}close-up on mechanisms, surfaces, operational state. The system performs exactly as designed. Impact or result shown through instruments and data, not through direct violence.
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No narration. Camera slowly pushes in on the ${theme.protagonist}'s face. Only ambient sound — machinery hum, ocean, wind.
 
-[NARRATOR] (${n2Chars}字 / ~${n2Speech}s):
-「${narration2}」
+Narration:
+- Japanese male narrator, 40s, calm, almost cold: "${narration1}"`;
 
-Cut back to the ${theme.protagonist}. ${profile.face} — unchanged. ${profile.body} — same as before. The data on the screen has changed. The mission status has changed. But the person has not.
+  const part2 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music. Continuing directly from Part 1.
 
-FINAL ${silentEnding}s (${activeTime}s-${videoDuration}s): No narration. No dialogue remaining. Camera holds on the ${theme.protagonist} at station. Equipment humming. Data still flowing. Complete silence from narrator. Only ambient sound. Slow fade to black.`;
+Characters (identical to Part 1 — same face, same hair, same uniform):
+${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
+${weaponBlock ? '\n' + weapon.detail : ''}
+
+COLOR GRADE: ${colorDesc}
+IDENTICAL color palette and grading to Part 1.
+
+${setting || theme.title}. ${camera2}
+
+(0:00-0:04) The situation escalates. ${weapon ? weapon.name + " hardware detail fills the screen — " : "Military hardware fills the screen — "}close-up on mechanisms, surfaces, operational state. The system performs exactly as designed.
+
+(0:04-0:${String(activeTime).padStart(2,'0')}) Cut back to the ${theme.protagonist}. ${profile.face} — unchanged. ${profile.body} — same as before. The data on the screen has changed. The mission status has changed. But the person has not.
+
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No narration. Camera holds on the ${theme.protagonist}. Complete silence. Slow fade to black.
+
+Narration:
+- Japanese male narrator, 40s, calm, almost cold: "${narration2}"`;
 
   return {
     part1,
@@ -585,37 +567,24 @@ Key close-up detail: ${profile.closeup}.`;
     ? `\n#HARDWARE DETAIL:\n${weapon.detail}`
     : "";
 
-  const prompt = `Cinematic drama, 9:16 vertical, 4K,
-photorealistic. No text on screen. No HUD overlays.
-No subtitles. No graphics. Nothing on screen
-except the footage itself.
+  const prompt = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music.
 
-#TIMING:
-Total duration: ${videoDuration}s. Active scene: ${activeTime}s. Final ${silentEnding}s: COMPLETE SILENCE.
-Narration: ${narChars} chars / ~${narSpeech}s speech. Speech speed: ~${speechSpeed} chars/sec.
+Characters:
+${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
+${weaponBlock ? '\n' + weapon.detail : ''}
 
 COLOR GRADE: ${colorDesc}
 
-${characterBlock}
-${weaponBlock}
+${theme.title}. ${camera}
 
-CAMERA: ${camera}
-Then: close-up transition — ${profile.closeup}. Equipment and instruments filling the frame.
+(0:00-0:${String(Math.floor(activeTime * 0.4)).padStart(2,'0')}) Establishing shot. ${weapon ? weapon.name + " system dominates the frame — " : "Military hardware dominates the frame — "}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Professional calm.
 
-LOCATION: ${theme.title}
+(0:${String(Math.floor(activeTime * 0.4)).padStart(2,'0')}-0:${String(activeTime).padStart(2,'0')}) The decisive moment. ${weapon ? weapon.name + " in action — " : "System engaging — "}mechanical precision, physics doing what physics does. Cut to ${profile.closeup}. Data changes on screen.
 
-NARRATOR: Japanese male voice. 40s. Calm. Almost cold.
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No narration. Camera holds on the ${theme.protagonist}'s face. Complete silence. Slow fade to black.
 
-#SCENE (0s-${Math.floor(activeTime * 0.4)}s)
-Establishing shot. ${weapon ? weapon.name + " system dominates the frame — " : "Military hardware dominates the frame — "}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Professional calm. No hurry.
-
-#SCENE (${Math.floor(activeTime * 0.4)}s-${activeTime}s)
-The decisive moment. ${weapon ? weapon.name + " in action — " : "System engaging — "}mechanical precision, physics doing what physics does. Cut to ${profile.closeup}. Data changes on screen.
-
-[NARRATOR] (${narChars}字 / ~${narSpeech}s):
-「${narration}」
-
-FINAL ${silentEnding}s (${activeTime}s-${videoDuration}s): No narration. Camera holds on the ${theme.protagonist}'s face. ${profile.face}. Complete silence. Only ambient sound — machinery hum, ocean, wind. Slow fade to black.`;
+Narration:
+- Japanese male narrator, 40s, calm, almost cold: "${narration}"`;
 
   return {
     single: prompt,
