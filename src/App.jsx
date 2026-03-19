@@ -5,6 +5,7 @@ import PromptOutput from './components/PromptOutput'
 import ThemeBrowser from './components/ThemeBrowser'
 import TimingSettings from './components/TimingSettings'
 import SystemPromptModal from './components/SystemPromptModal'
+import ScriptHistory from './components/ScriptHistory'
 import './App.css'
 
 function App() {
@@ -237,33 +238,16 @@ function App() {
           <PromptOutput prompts={prompts} theme={theme || { title: customTheme }} />
         )}
 
-        {/* History */}
-        {history.length > 0 && !prompts && (
-          <section className="tactical-panel p-5" style={{ border: '1px solid var(--mil-border)', background: 'var(--mil-panel)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--mil-text-dim)' }}>MISSION LOG</span>
-              <div className="flex-1 h-px" style={{ background: 'var(--mil-border)' }} />
-            </div>
-            <div className="space-y-1">
-              {history.map((item, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setTheme(item.theme)
-                    setCustomTheme(item.theme.title)
-                    setPrompts(item.prompts)
-                  }}
-                  className="w-full text-left px-3 py-2 text-xs transition flex items-center gap-2"
-                  style={{ color: 'var(--mil-text)', borderBottom: '1px solid var(--mil-border)' }}
-                  onMouseEnter={e => { e.target.style.color = 'var(--mil-green)'; e.target.style.background = 'rgba(0,255,65,0.03)' }}
-                  onMouseLeave={e => { e.target.style.color = 'var(--mil-text)'; e.target.style.background = 'transparent' }}
-                >
-                  <span style={{ color: 'var(--mil-text-dim)' }}>[{String(i + 1).padStart(2, '0')}]</span>
-                  {item.theme.title}
-                </button>
-              ))}
-            </div>
-          </section>
+        {/* Script History — always visible when there are entries */}
+        {history.length > 0 && (
+          <ScriptHistory
+            history={history}
+            onSelect={(item) => {
+              setTheme(item.theme)
+              setCustomTheme(item.theme.title)
+              setPrompts(item.prompts)
+            }}
+          />
         )}
       </main>
 
