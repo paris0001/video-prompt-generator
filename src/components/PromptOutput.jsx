@@ -70,6 +70,28 @@ function NarrationInfoBar({ info, meta }) {
   )
 }
 
+function ScriptBlock({ label, text, accentColor = 'var(--mil-green)' }) {
+  const chars = text.length
+  return (
+    <div className="mt-1 px-4 py-3" style={{ borderTop: '1px dashed var(--mil-border)', background: 'rgba(0,0,0,0.15)' }}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] tracking-widest uppercase" style={{ color: accentColor }}>
+            {label}
+          </span>
+          <span className="text-[10px] tracking-wider" style={{ color: 'var(--mil-text-dim)' }}>
+            {chars}字
+          </span>
+        </div>
+        <CopyButton text={text} label="COPY SCRIPT" />
+      </div>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--mil-text)', letterSpacing: '0.02em' }}>
+        {text}
+      </p>
+    </div>
+  )
+}
+
 function TwoPartOutput({ prompts, theme, meta }) {
   return (
     <div className="space-y-4">
@@ -86,6 +108,7 @@ function TwoPartOutput({ prompts, theme, meta }) {
         <pre className="p-4 text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto" style={{ color: 'var(--mil-text)', fontFamily: 'inherit' }}>
           {prompts.part1}
         </pre>
+        {meta?.n1 && <ScriptBlock label="SCRIPT PT.1" text={meta.n1.text} accentColor="var(--mil-green)" />}
       </section>
 
       {/* Part 2 */}
@@ -101,15 +124,23 @@ function TwoPartOutput({ prompts, theme, meta }) {
         <pre className="p-4 text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto" style={{ color: 'var(--mil-text)', fontFamily: 'inherit' }}>
           {prompts.part2}
         </pre>
+        {meta?.n2 && <ScriptBlock label="SCRIPT PT.2" text={meta.n2.text} accentColor="var(--mil-amber)" />}
       </section>
 
       {/* Copy Both */}
-      <div className="flex justify-center py-1">
+      <div className="flex justify-center gap-2 py-1">
         <CopyButton
           text={`=== PART 1 — FRONT ===\n\n${prompts.part1}\n\n=== PART 2 — BACK ===\n\n${prompts.part2}`}
           label="◆ COPY ALL PROMPTS"
           variant="primary"
         />
+        {meta?.n1 && meta?.n2 && (
+          <CopyButton
+            text={`【前編台本】\n${meta.n1.text}\n\n【後編台本】\n${meta.n2.text}`}
+            label="◆ COPY ALL SCRIPTS"
+            variant="primary"
+          />
+        )}
       </div>
     </div>
   )
@@ -130,6 +161,7 @@ function SingleOutput({ prompts, theme, meta }) {
         <pre className="p-4 text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto" style={{ color: 'var(--mil-text)', fontFamily: 'inherit' }}>
           {prompts.single}
         </pre>
+        {meta?.narration && <ScriptBlock label="SCRIPT" text={meta.narration.text} accentColor="var(--mil-green)" />}
       </section>
     </div>
   )
