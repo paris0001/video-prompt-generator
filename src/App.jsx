@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { categories, getRandomTheme } from './data/themes'
-import { generatePrompts, generateSystemPrompt, defaultTiming } from './data/promptTemplates'
+import { generatePrompts, generateSinglePrompt, generateSystemPrompt, defaultTiming } from './data/promptTemplates'
 import PromptOutput from './components/PromptOutput'
 import ThemeBrowser from './components/ThemeBrowser'
 import TimingSettings from './components/TimingSettings'
@@ -16,6 +16,7 @@ function App() {
   const [showSystem, setShowSystem] = useState(false)
   const [history, setHistory] = useState([])
   const [timing, setTiming] = useState(defaultTiming)
+  const [mode, setMode] = useState('2part') // '2part' or 'single'
 
   const handleRandom = useCallback(() => {
     const t = getRandomTheme()
@@ -36,10 +37,12 @@ function App() {
       color: "cold_ocean",
       protagonist: "艦長",
     }
-    const result = generatePrompts(activeTheme, timing)
-    setPrompts(result)
-    setHistory(prev => [{ theme: activeTheme, prompts: result, time: new Date() }, ...prev].slice(0, 10))
-  }, [theme, customTheme, timing])
+    const result = mode === 'single'
+      ? generateSinglePrompt(activeTheme, timing)
+      : generatePrompts(activeTheme, timing)
+    setPrompts({ ...result, mode })
+    setHistory(prev => [{ theme: activeTheme, prompts: { ...result, mode }, time: new Date() }, ...prev].slice(0, 10))
+  }, [theme, customTheme, timing, mode])
 
   const handleCustomChange = useCallback((e) => {
     setCustomTheme(e.target.value)
@@ -135,6 +138,34 @@ function App() {
               >
                 {showThemes ? '× CLOSE DB' : '◆ THEME DATABASE [100]'}
               </button>
+            </div>
+
+            {/* Mode Toggle */}
+            <div className="flex gap-1">
+              {[
+                { id: '2part', label: '2-PART (12s×2)' },
+                { id: 'single', label: 'SINGLE (15s)' },
+              ].map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => setMode(m.id)}
+                  className="px-3 py-1.5 text-[10px] tracking-wider uppercase font-medium transition"
+                  style={{
+                    background: mode === m.id ? 'var(--mil-green-dim)' : 'transparent',
+                    border: `1px solid ${mode === m.id ? 'var(--mil-green)' : 'var(--mil-border)'}`,
+                    color: mode === m.id ? 'var(--mil-green)' : 'var(--mil-text-dim)',
+                    textShadow: mode === m.id ? '0 0 6px rgba(0,255,65,0.3)' : 'none',
+                  }}
+                  onMouseEnter={e => {
+                    if (mode !== m.id) { e.currentTarget.style.borderColor = 'var(--mil-green)'; e.currentTarget.style.color = 'var(--mil-text)' }
+                  }}
+                  onMouseLeave={e => {
+                    if (mode !== m.id) { e.currentTarget.style.borderColor = 'var(--mil-border)'; e.currentTarget.style.color = 'var(--mil-text-dim)' }
+                  }}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
 
             <div className="flex gap-2">

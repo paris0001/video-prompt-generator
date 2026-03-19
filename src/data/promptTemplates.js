@@ -552,6 +552,84 @@ FINAL ${silentEnding}s (${activeTime}s-${videoDuration}s): No narration. No dial
   };
 }
 
+// ===== SINGLE 15s GENERATION =====
+export function generateSinglePrompt(theme, timing = defaultTiming) {
+  const {
+    charMin = 60,
+    charMax = 80,
+    silentEnding = 1,
+    speechSpeed = 6,
+  } = timing;
+  const videoDuration = 15;
+  const activeTime = videoDuration - silentEnding;
+
+  const colorDesc = colorGrades[theme.color] || colorGrades.steel_grey;
+  const profile = getProfile(theme.protagonist);
+  const weapon = detectWeapon(theme.title);
+  const camera = getCameraForStage(theme.stage);
+
+  // Combine n1+n2 into full narration, pick the more impactful one (n2 = conclusion)
+  const narration1 = (theme.n1 || []).join('');
+  const narration2 = (theme.n2 || []).join('');
+  // Use n2 (conclusion/punchline) as primary, n1 as fallback
+  const narration = narration2 || narration1;
+  const narChars = narration.length;
+  const narSpeech = Math.ceil(narChars / speechSpeed);
+
+  const characterBlock = `#CHARACTER:
+${profile.face}.
+${profile.body}.
+Key close-up detail: ${profile.closeup}.`;
+
+  const weaponBlock = weapon
+    ? `\n#HARDWARE DETAIL:\n${weapon.detail}`
+    : "";
+
+  const prompt = `Cinematic drama, 9:16 vertical, 4K,
+photorealistic. No text on screen. No HUD overlays.
+No subtitles. No graphics. Nothing on screen
+except the footage itself.
+
+#TIMING:
+Total duration: ${videoDuration}s. Active scene: ${activeTime}s. Final ${silentEnding}s: COMPLETE SILENCE.
+Narration: ${narChars} chars / ~${narSpeech}s speech. Speech speed: ~${speechSpeed} chars/sec.
+
+COLOR GRADE: ${colorDesc}
+
+${characterBlock}
+${weaponBlock}
+
+CAMERA: ${camera}
+Then: close-up transition — ${profile.closeup}. Equipment and instruments filling the frame.
+
+LOCATION: ${theme.title}
+
+NARRATOR: Japanese male voice. 40s. Calm. Almost cold.
+
+#SCENE (0s-${Math.floor(activeTime * 0.4)}s)
+Establishing shot. ${weapon ? weapon.name + " system dominates the frame — " : "Military hardware dominates the frame — "}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Professional calm. No hurry.
+
+#SCENE (${Math.floor(activeTime * 0.4)}s-${activeTime}s)
+The decisive moment. ${weapon ? weapon.name + " in action — " : "System engaging — "}mechanical precision, physics doing what physics does. Cut to ${profile.closeup}. Data changes on screen.
+
+[NARRATOR] (${narChars}字 / ~${narSpeech}s):
+「${narration}」
+
+FINAL ${silentEnding}s (${activeTime}s-${videoDuration}s): No narration. Camera holds on the ${theme.protagonist}'s face. ${profile.face}. Complete silence. Only ambient sound — machinery hum, ocean, wind. Slow fade to black.`;
+
+  return {
+    single: prompt,
+    meta: {
+      narration: { text: narration, chars: narChars, speechTime: narSpeech },
+      charMin,
+      charMax,
+      videoDuration,
+      silentEnding,
+      activeTime,
+    }
+  };
+}
+
 // ===== SYSTEM PROMPT =====
 export function generateSystemPrompt() {
   return `あなたはミリタリー系ショート動画のプロンプトライターです。

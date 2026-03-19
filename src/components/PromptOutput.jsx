@@ -35,7 +35,6 @@ function CopyButton({ text, label, variant = 'default' }) {
 function CharBadge({ chars, min, max }) {
   const inRange = chars >= min && chars <= max
   const under = chars < min
-  const over = chars > max
   const color = inRange ? 'var(--mil-green)' : under ? 'var(--mil-amber)' : 'var(--mil-red)'
   const bg = inRange ? 'rgba(0,255,65,0.08)' : under ? 'rgba(255,176,0,0.08)' : 'rgba(255,32,32,0.08)'
   const label = inRange ? 'IN RANGE' : under ? `${min - chars}字 SHORT` : `${chars - max}字 OVER`
@@ -50,12 +49,10 @@ function CharBadge({ chars, min, max }) {
   )
 }
 
-function NarrationInfo({ meta, partLabel }) {
-  if (!meta) return null
-  const info = partLabel === 'PT.1' ? meta.n1 : meta.n2
-
+function NarrationInfoBar({ info, meta }) {
+  if (!info || !meta) return null
   return (
-    <div className="flex items-center gap-2 px-4 py-1.5" style={{ borderBottom: '1px solid var(--mil-border)', background: 'rgba(0,0,0,0.2)' }}>
+    <div className="flex items-center gap-2 px-4 py-1.5 flex-wrap" style={{ borderBottom: '1px solid var(--mil-border)', background: 'rgba(0,0,0,0.2)' }}>
       <span className="text-[9px] tracking-wider uppercase" style={{ color: 'var(--mil-text-dim)' }}>
         NARRATION:
       </span>
@@ -73,18 +70,9 @@ function NarrationInfo({ meta, partLabel }) {
   )
 }
 
-export default function PromptOutput({ prompts, theme }) {
-  const meta = prompts.meta || null
-
+function TwoPartOutput({ prompts, theme, meta }) {
   return (
     <div className="space-y-4">
-      {/* Title bar */}
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] tracking-widest uppercase glow-amber">OUTPUT</span>
-        <div className="flex-1 h-px" style={{ background: 'var(--mil-border)' }} />
-        <span className="text-xs glow-green">{theme.title}</span>
-      </div>
-
       {/* Part 1 */}
       <section className="tactical-panel" style={{ border: '1px solid var(--mil-border)', background: 'var(--mil-panel)' }}>
         <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--mil-border)', background: 'rgba(0, 255, 65, 0.03)' }}>
@@ -94,7 +82,7 @@ export default function PromptOutput({ prompts, theme }) {
           </div>
           <CopyButton text={prompts.part1} label="COPY PT.1" />
         </div>
-        <NarrationInfo meta={meta} partLabel="PT.1" />
+        <NarrationInfoBar info={meta?.n1} meta={meta} />
         <pre className="p-4 text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto" style={{ color: 'var(--mil-text)', fontFamily: 'inherit' }}>
           {prompts.part1}
         </pre>
@@ -109,7 +97,7 @@ export default function PromptOutput({ prompts, theme }) {
           </div>
           <CopyButton text={prompts.part2} label="COPY PT.2" />
         </div>
-        <NarrationInfo meta={meta} partLabel="PT.2" />
+        <NarrationInfoBar info={meta?.n2} meta={meta} />
         <pre className="p-4 text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto" style={{ color: 'var(--mil-text)', fontFamily: 'inherit' }}>
           {prompts.part2}
         </pre>
@@ -123,6 +111,53 @@ export default function PromptOutput({ prompts, theme }) {
           variant="primary"
         />
       </div>
+    </div>
+  )
+}
+
+function SingleOutput({ prompts, theme, meta }) {
+  return (
+    <div className="space-y-4">
+      <section className="tactical-panel" style={{ border: '1px solid var(--mil-border)', background: 'var(--mil-panel)' }}>
+        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--mil-border)', background: 'rgba(0, 255, 65, 0.03)' }}>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--mil-green)', boxShadow: '0 0 6px var(--mil-green)' }} />
+            <span className="text-[10px] tracking-widest uppercase glow-green">SINGLE 15s — COMPLETE</span>
+          </div>
+          <CopyButton text={prompts.single} label="COPY PROMPT" variant="primary" />
+        </div>
+        <NarrationInfoBar info={meta?.narration} meta={meta} />
+        <pre className="p-4 text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto" style={{ color: 'var(--mil-text)', fontFamily: 'inherit' }}>
+          {prompts.single}
+        </pre>
+      </section>
+    </div>
+  )
+}
+
+export default function PromptOutput({ prompts, theme }) {
+  const meta = prompts.meta || null
+  const isSingle = prompts.mode === 'single'
+
+  return (
+    <div className="space-y-4">
+      {/* Title bar */}
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] tracking-widest uppercase glow-amber">OUTPUT</span>
+        <span className="text-[10px] tracking-wider px-2 py-0.5" style={{
+          border: '1px solid var(--mil-border)',
+          color: isSingle ? 'var(--mil-amber)' : 'var(--mil-green)',
+        }}>
+          {isSingle ? 'SINGLE 15s' : '2-PART'}
+        </span>
+        <div className="flex-1 h-px" style={{ background: 'var(--mil-border)' }} />
+        <span className="text-xs glow-green">{theme.title}</span>
+      </div>
+
+      {isSingle
+        ? <SingleOutput prompts={prompts} theme={theme} meta={meta} />
+        : <TwoPartOutput prompts={prompts} theme={theme} meta={meta} />
+      }
     </div>
   )
 }
