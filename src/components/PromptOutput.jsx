@@ -167,6 +167,55 @@ function SingleOutput({ prompts, theme, meta }) {
   )
 }
 
+function PostInfoBlock({ theme }) {
+  if (!theme.ytTitle && !theme.ytDesc) return null
+  return (
+    <section className="tactical-panel" style={{ border: '1px solid var(--mil-border)', background: 'var(--mil-panel)' }}>
+      <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+        <span className="text-[10px] tracking-widest uppercase glow-green">POST INFO</span>
+        <div className="flex-1 h-px" style={{ background: 'var(--mil-border)' }} />
+      </div>
+
+      {/* Title */}
+      {theme.ytTitle && (
+        <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--mil-border)' }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] tracking-wider uppercase" style={{ color: 'var(--mil-amber)' }}>TITLE</span>
+            <CopyButton text={theme.ytTitle} label="COPY TITLE" />
+          </div>
+          <p className="text-sm font-bold" style={{ color: 'var(--mil-text)', lineHeight: '1.5' }}>
+            {theme.ytTitle}
+          </p>
+        </div>
+      )}
+
+      {/* Description */}
+      {theme.ytDesc && (
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] tracking-wider uppercase" style={{ color: 'var(--mil-amber)' }}>DESCRIPTION</span>
+            <CopyButton text={theme.ytDesc} label="COPY DESC" />
+          </div>
+          <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--mil-text)' }}>
+            {theme.ytDesc}
+          </p>
+        </div>
+      )}
+
+      {/* Copy All Post Info */}
+      {theme.ytTitle && theme.ytDesc && (
+        <div className="flex justify-center py-2" style={{ borderTop: '1px solid var(--mil-border)' }}>
+          <CopyButton
+            text={`${theme.ytTitle}\n\n${theme.ytDesc}`}
+            label="◆ COPY TITLE + DESC"
+            variant="primary"
+          />
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function PromptOutput({ prompts, theme }) {
   const meta = prompts.meta || null
   const isSingle = prompts.mode === 'single'
@@ -185,6 +234,9 @@ export default function PromptOutput({ prompts, theme }) {
         <div className="flex-1 h-px" style={{ background: 'var(--mil-border)' }} />
         <span className="text-xs glow-green">{theme.title}</span>
       </div>
+
+      {/* Post Info (Title + Description) */}
+      <PostInfoBlock theme={theme} />
 
       {isSingle
         ? <SingleOutput prompts={prompts} theme={theme} meta={meta} />
