@@ -11,6 +11,11 @@ const colorGrades = {
   sky_blue: "Clear high-altitude blue. Harsh direct sunlight. Sharp contrast between aircraft surfaces and sky. Cockpit interior in shadow except instrument glow. Visor reflections.",
   urban_grey: "Urban concrete grey. Particulate dust in air. Muted earth tones. Hard directional shadows from low sun. Skin tones dirty, weathered.",
   desert_sand: "Hot desert sand tones. Harsh overhead sunlight. Heat shimmer distortion. Dry, bleached colors. Sweat on skin catching light.",
+  // ===== DEFCON 1 — direct combat color grades =====
+  combat_red: "Battle-station red lighting flooding the compartment — every surface saturated in deep crimson alert glow. Faces split between blood-red key light and pitch-black shadow. Sweat catches the red. Strobing emergency beacons throw rotating shadows across bulkheads.",
+  burning_sea: "Burning sea horizon — black smoke columns rising from multiple impact points, orange fire reflected in oily black water. Sky bruised with ash and dawn red. Faces half-lit in fire-glow, half in soot.",
+  missile_streak: "Pre-dawn black sky cut by the white-hot trails of outbound and inbound missiles. Lightning-bright flashes from launches and intercepts overpowering ambient light. Faces strobed by overlapping muzzle/launch flares.",
+  saturation_dawn: "Grey dawn turned hostile — multiple inbound contacts trailing smoke against a pale sky. Cold morning light cut by red warning beacons sweeping the compartment. Air visibly disturbed by overpressure waves.",
 };
 
 // ===== PROTAGONIST VISUAL PROFILES =====
@@ -438,8 +443,56 @@ export const defaultTiming = {
   speechSpeed: 6,
 };
 
+// ===== INTENSITY PROFILES =====
+// 'cool'  = original calm/observational tone (DEFCON 3-5)
+// 'hot'   = direct combat / DEFCON 1 — adversary is engaged in real time
+const intensityProfiles = {
+  cool: {
+    label: 'DEFCON 3 — STANDBY',
+    narratorVoice: 'calm, almost cold, restrained',
+    closingTone: 'Only ambient — machinery hum, ocean, wind.',
+    silentTail: 'Silent hold. Complete silence. Slow fade to black.',
+    palette: null, // use theme.color as-is
+    combatScene1: (w) => w
+      ? `${w.name} system activates — mechanical components lock into position, power systems surge. The moment before engagement. Tension without resolution.`
+      : `Military systems activate — mechanical precision, power surge through hardware. The moment before engagement.`,
+    combatScene2: (w) => w
+      ? `${w.name} fires / launches / engages. The system performs with brutal mechanical precision. Impact shown through instruments, data readouts, and the reactions of personnel — not through direct violence. Physics doing what physics does. The power of this nation's defense technology on full display.`
+      : `The system engages with devastating mechanical precision. Impact registered on instruments. The quiet power of a nation that built this technology.`,
+    patrioticNote: `The weight of protecting this nation rests on this crew. They carry it without complaint. This is what they trained for. This is what they chose.`,
+    openingBanner: '',
+    closingMoral: `Not aggression — precision. Not violence — physics.`,
+  },
+  hot: {
+    label: 'DEFCON 1 — WEAPONS FREE',
+    narratorVoice: 'low, taut, controlled urgency — the voice of a man reading a war diary mid-engagement',
+    closingTone: 'Only ambient — alarm klaxons in the distance, hull groaning, distant impacts walking closer.',
+    silentTail: 'Silent hold. No music. Only the red emergency beacon strobing across the ${role} face. Slow fade to black.',
+    palette: 'combat_red', // override color grade
+    combatScene1: (w, e) => {
+      const enemy = e || 'hostile force';
+      return w
+        ? `${w.name} commits to the engagement. Hatches blow open, capacitors discharge, autoloaders cycle. ${enemy.toUpperCase()} contacts inbound — bearing closing, range collapsing, time-to-merge under sixty seconds. The crew is no longer training. They are fighting.`
+        : `All combat stations active. ${enemy.toUpperCase()} contacts inbound — bearing closing, range collapsing. Weapons released. The crew is no longer training. They are fighting.`;
+    },
+    combatScene2: (w, e) => {
+      const enemy = e || 'hostile force';
+      return w
+        ? `${w.name} engages. Tracer arc, missile bloom, heat-shimmer of expended cells. ${enemy.toUpperCase()} platform takes the hit — superstructure comes apart in slow-motion frames, secondaries cooking off. Counter-fire arrives — overpressure rocks the camera, shrapnel scars bulkheads, alarm panels strobe red across every face. This is not a demonstration. This is a kill chain executing in real time.`
+        : `The engagement closes. Outbound ordnance leaves the rail. ${enemy.toUpperCase()} platform takes the hit — secondaries cooking off, target dead in the water. Counter-fire arrives — overpressure rocks the camera, alarm panels strobe red across every face. This is not a demonstration. This is a kill chain executing in real time.`;
+    },
+    patrioticNote: `The line is here. There is no further line behind them. Every man at his station knows it. Hands do not shake. Voices do not rise. The work continues because no one is coming to do it for them.`,
+    openingBanner: `[DEFCON 1 — ACTIVE ENGAGEMENT // ROE: WEAPONS FREE]\n`,
+    closingMoral: `No metaphor. No abstraction. The threat closed the distance and the answer was returned in kind.`,
+  },
+};
+
+function resolveIntensity(intensity) {
+  return intensityProfiles[intensity] || intensityProfiles.cool;
+}
+
 // ===== MAIN GENERATION =====
-export function generatePrompts(theme, timing = defaultTiming) {
+export function generatePrompts(theme, timing = defaultTiming, intensity = 'cool') {
   const {
     videoDuration = 20,
     charMin = 60,
@@ -448,11 +501,14 @@ export function generatePrompts(theme, timing = defaultTiming) {
     speechSpeed = 6,
   } = timing;
 
-  const colorDesc = colorGrades[theme.color] || colorGrades.steel_grey;
+  const prof = resolveIntensity(intensity);
+  const colorKey = prof.palette || theme.color;
+  const colorDesc = colorGrades[colorKey] || colorGrades.steel_grey;
   const profile = getProfile(theme.protagonist);
   const weapon = detectWeapon(theme.title);
   const camera1 = getCameraForStage(theme.stage);
   const camera2 = getCameraForStage(theme.stage);
+  const enemy = theme.enemy || null;
 
   // Combine narration lines into single blocks
   const narration1 = (theme.n1 || ["状況を数字で述べる。なぜ重要なのかを事実で語る。"]).join('');
@@ -464,87 +520,69 @@ export function generatePrompts(theme, timing = defaultTiming) {
   const n2Speech = Math.ceil(n2Chars / speechSpeed);
   const activeTime = videoDuration - silentEnding;
 
-  // Character description block — IDENTICAL in both parts
-  const characterBlock = `#CHARACTER (CONSISTENT ACROSS ALL SCENES):
-${profile.face}.
-${profile.body}.
-Key close-up detail: ${profile.closeup}.`;
-
-  // Weapon detail block
-  const weaponBlock = weapon
-    ? `\n#HARDWARE DETAIL:\n${weapon.detail}`
-    : "";
-
-  // Timing instruction block
-  const timingBlock = `#TIMING:
-Total duration: ${videoDuration}s. Active scene: ${activeTime}s. Final ${silentEnding}s: COMPLETE SILENCE.
-Narration target: ${charMin}-${charMax} chars per part. Speech speed: ~${speechSpeed} chars/sec.`;
-
   // Randomly choose: narration mode or dialogue mode
   const isDialogueMode = Math.random() > 0.5;
   const mode = isDialogueMode ? 'dialogue' : 'narration';
 
-  // Combat scene inserts (always included)
-  const combatScene1 = weapon
-    ? `${weapon.name} system activates — mechanical components lock into position, power systems surge. The moment before engagement. Tension without resolution.`
-    : `Military systems activate — mechanical precision, power surge through hardware. The moment before engagement.`;
-  const combatScene2 = weapon
-    ? `${weapon.name} fires / launches / engages. The system performs with brutal mechanical precision. Impact shown through instruments, data readouts, and the reactions of personnel — not through direct violence. Physics doing what physics does. The power of this nation's defense technology on full display.`
-    : `The system engages with devastating mechanical precision. Impact registered on instruments. The quiet power of a nation that built this technology.`;
-
-  // Patriotic undertone phrases (subtle, woven into scene descriptions)
-  const patrioticNote = `The weight of protecting this nation rests on this crew. They carry it without complaint. This is what they trained for. This is what they chose.`;
+  // Combat scene inserts (intensity-aware)
+  const combatScene1 = prof.combatScene1(weapon, enemy);
+  const combatScene2 = prof.combatScene2(weapon, enemy);
+  const patrioticNote = prof.patrioticNote;
+  const banner = prof.openingBanner;
+  const closingMoral = prof.closingMoral;
+  const silentTail = prof.silentTail.replace('${role}', theme.protagonist + "'s");
+  const enemyBlock = enemy
+    ? `\n#OPPOSING FORCE:\nDesignated "${enemy}" — fictional adversary state. Equipment described in generic terms only (warship, missile, fighter). No real-world flags, insignia, or national markings on enemy hardware. Treat as an unmarked hostile platform.`
+    : "";
 
   // Audio block — different for narration vs dialogue
   let audio1, audio2;
   if (isDialogueMode) {
-    // Dialogue mode: the protagonist speaks directly
     audio1 = `Dialogue:\n- ${profile.face}, ${profile.body}: "${narration1}"`;
     audio2 = `Dialogue:\n- ${profile.face}, ${profile.body}: "${narration2}"`;
   } else {
-    // Narration mode: external narrator voice
-    audio1 = `Narration:\n- Japanese male narrator, 40s, calm, almost cold voice (SAME voice in Part 1 and Part 2): "${narration1}"`;
-    audio2 = `Narration:\n- Japanese male narrator, 40s, calm, almost cold voice (SAME voice as Part 1): "${narration2}"`;
+    audio1 = `Narration:\n- Japanese male narrator, 40s, ${prof.narratorVoice} (SAME voice in Part 1 and Part 2): "${narration1}"`;
+    audio2 = `Narration:\n- Japanese male narrator, 40s, ${prof.narratorVoice} (SAME voice as Part 1): "${narration2}"`;
   }
 
-  const part1 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD. No subtitles. No background music.
+  const part1 = `${banner}Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD. No subtitles. No background music.
 
 Characters (identical in Part 1 and Part 2):
 ${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
-${weapon ? '\n' + weapon.detail : ''}
+${weapon ? '\n' + weapon.detail : ''}${enemyBlock}
 
 COLOR GRADE: ${colorDesc}
 
 ${theme.title}. ${camera1}
 
-(0:00-0:04) Exterior establishing shot. ${weapon ? weapon.name + " system visible in detail, " : ""}operational environment at full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Professional calm. ${patrioticNote}
+(0:00-0:04) Exterior establishing shot. ${weapon ? weapon.name + " system visible in detail, " : ""}operational environment at full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. ${intensity === 'hot' ? 'Eyes locked. Jaw set. Weapons posture.' : 'Professional calm.'} ${patrioticNote}
 
 (0:04-0:08) ${combatScene1} Interior shot. ${profile.closeup}. Equipment detail fills background. The ${theme.protagonist} reads data. Something is changing. Tension builds.
 
 (0:08-0:${String(activeTime).padStart(2,'0')}) The moment of action. ${combatScene2}
 
-(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No sound. Camera on the ${theme.protagonist}'s face. Only ambient — machinery hum, ocean, wind.
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No sound. Camera on the ${theme.protagonist}'s face. ${prof.closingTone}
 
 ${audio1}`;
 
-  const part2 = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD. No subtitles. No background music. Continuing directly from Part 1.
+  const part2 = `${banner}Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD. No subtitles. No background music. Continuing directly from Part 1.
 
 Characters (identical to Part 1 — same face, same hair, same uniform):
 ${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
-${weapon ? '\n' + weapon.detail : ''}
+${weapon ? '\n' + weapon.detail : ''}${enemyBlock}
 
 COLOR GRADE: ${colorDesc}
 IDENTICAL to Part 1.
 
 ${theme.title}. ${camera2}
 
-(0:00-0:04) The aftermath. ${weapon ? weapon.name + " hardware detail — " : "Military hardware — "}systems cycling down, data streaming across displays. The engagement result visible on instruments. The crew processes what just happened.
+(0:00-0:04) ${intensity === 'hot' ? 'Mid-engagement.' : 'The aftermath.'} ${weapon ? weapon.name + " hardware detail — " : "Military hardware — "}systems ${intensity === 'hot' ? 'cycling at maximum, brass and shell casings ejecting, vapor venting' : 'cycling down, data streaming across displays'}. The engagement result visible on instruments. The crew ${intensity === 'hot' ? 'absorbs the next wave' : 'processes what just happened'}.
 
-(0:04-0:08) Decisive combat moment. ${combatScene2} The full capability of this nation's defense demonstrated in seconds. Not aggression — precision. Not violence — physics.
+(0:04-0:08) Decisive combat moment. ${combatScene2} The full capability of this nation's defense demonstrated in seconds. ${closingMoral}
 
 (0:08-0:${String(activeTime).padStart(2,'0')}) Cut back to the ${theme.protagonist}. ${profile.face} — unchanged. ${profile.body} — same. The data changed. The person did not. A professional who protects without being seen. ${patrioticNote}
 
-(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. Complete silence. Slow fade to black.
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) ${silentTail}
 
 ${audio2}`;
 
@@ -552,6 +590,7 @@ ${audio2}`;
     part1,
     part2,
     audioMode: mode,
+    intensity,
     meta: {
       n1: { text: narration1, chars: n1Chars, speechTime: n1Speech },
       n2: { text: narration2, chars: n2Chars, speechTime: n2Speech },
@@ -560,12 +599,14 @@ ${audio2}`;
       videoDuration,
       silentEnding,
       activeTime,
+      intensity,
+      intensityLabel: prof.label,
     }
   };
 }
 
 // ===== SINGLE 15s GENERATION =====
-export function generateSinglePrompt(theme, timing = defaultTiming) {
+export function generateSinglePrompt(theme, timing = defaultTiming, intensity = 'cool') {
   const {
     charMin = 60,
     charMax = 80,
@@ -575,49 +616,50 @@ export function generateSinglePrompt(theme, timing = defaultTiming) {
   const videoDuration = 15;
   const activeTime = videoDuration - silentEnding;
 
-  const colorDesc = colorGrades[theme.color] || colorGrades.steel_grey;
+  const prof = resolveIntensity(intensity);
+  const colorKey = prof.palette || theme.color;
+  const colorDesc = colorGrades[colorKey] || colorGrades.steel_grey;
   const profile = getProfile(theme.protagonist);
   const weapon = detectWeapon(theme.title);
   const camera = getCameraForStage(theme.stage);
+  const enemy = theme.enemy || null;
 
   // Combine n1+n2 into full narration, pick the more impactful one (n2 = conclusion)
   const narration1 = (theme.n1 || []).join('');
   const narration2 = (theme.n2 || []).join('');
-  // Use n2 (conclusion/punchline) as primary, n1 as fallback
   const narration = narration2 || narration1;
   const narChars = narration.length;
   const narSpeech = Math.ceil(narChars / speechSpeed);
 
-  const characterBlock = `#CHARACTER:
-${profile.face}.
-${profile.body}.
-Key close-up detail: ${profile.closeup}.`;
-
-  const weaponBlock = weapon
-    ? `\n#HARDWARE DETAIL:\n${weapon.detail}`
+  const enemyBlock = enemy
+    ? `\n#OPPOSING FORCE:\nDesignated "${enemy}" — fictional adversary state. Equipment in generic terms only (warship, missile, fighter). No real-world flags or insignia.`
     : "";
+  const combatScene = prof.combatScene2(weapon, enemy);
+  const banner = prof.openingBanner;
+  const silentTail = prof.silentTail.replace('${role}', theme.protagonist + "'s");
 
-  const prompt = `Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music.
+  const prompt = `${banner}Cinematic drama, 9:16 vertical, 4K, photorealistic. ${videoDuration} seconds. No text on screen. No HUD overlays. No subtitles. No graphics. No background music.
 
 Characters:
 ${profile.face}. ${profile.body}. Key detail: ${profile.closeup}.
-${weaponBlock ? '\n' + weapon.detail : ''}
+${weapon ? '\n' + weapon.detail : ''}${enemyBlock}
 
 COLOR GRADE: ${colorDesc}
 
 ${theme.title}. ${camera}
 
-(0:00-0:${String(Math.floor(activeTime * 0.4)).padStart(2,'0')}) Establishing shot. ${weapon ? weapon.name + " system dominates the frame — " : "Military hardware dominates the frame — "}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. Professional calm.
+(0:00-0:${String(Math.floor(activeTime * 0.4)).padStart(2,'0')}) Establishing shot. ${weapon ? weapon.name + " system dominates the frame — " : "Military hardware dominates the frame — "}operational environment shown in full scale. The camera finds the ${theme.protagonist}. ${profile.face}. ${profile.body}. ${intensity === 'hot' ? 'Eyes locked. Jaw set. Weapons posture.' : 'Professional calm.'}
 
-(0:${String(Math.floor(activeTime * 0.4)).padStart(2,'0')}-0:${String(activeTime).padStart(2,'0')}) The decisive moment. ${weapon ? weapon.name + " in action — " : "System engaging — "}mechanical precision, physics doing what physics does. Cut to ${profile.closeup}. Data changes on screen.
+(0:${String(Math.floor(activeTime * 0.4)).padStart(2,'0')}-0:${String(activeTime).padStart(2,'0')}) The decisive moment. ${combatScene} Cut to ${profile.closeup}. Data changes on screen.
 
-(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) Silent hold. No narration. Camera holds on the ${theme.protagonist}'s face. Complete silence. Slow fade to black.
+(0:${String(activeTime).padStart(2,'0')}-0:${String(videoDuration).padStart(2,'0')}) ${silentTail}
 
 Narration:
-- Japanese male narrator, 40s, calm, almost cold: "${narration}"`;
+- Japanese male narrator, 40s, ${prof.narratorVoice}: "${narration}"`;
 
   return {
     single: prompt,
+    intensity,
     meta: {
       narration: { text: narration, chars: narChars, speechTime: narSpeech },
       charMin,
@@ -625,6 +667,8 @@ Narration:
       videoDuration,
       silentEnding,
       activeTime,
+      intensity,
+      intensityLabel: prof.label,
     }
   };
 }
@@ -680,5 +724,14 @@ Sora 2等の動画生成AIに入力するシネマティックプロンプトを
 
 ## 構成パターン
 前編：状況提示（兵器と人物の紹介）→ 緊張高まる（データが変化）→ 引き（沈黙）
-後編：決定的瞬間（システム作動）→ 結果（数字で報告）→ 余韻（人物は動かない）`;
+後編：決定的瞬間（システム作動）→ 結果（数字で報告）→ 余韻（人物は動かない）
+
+## DEFCONモード（intensity = 'hot'）
+近隣国との直接交戦シナリオ専用。以下を強化する：
+- カラーグレードを combat_red に強制上書き（赤色アラート照明）
+- ナレーター声色：低く張り詰めた、戦闘日誌を読み上げるような抑制された緊迫感
+- 戦闘描写：兵器発射の物理だけでなく、敵プラットフォームへの命中、上部構造の崩壊、二次爆発、こちらへの被弾の衝撃、ブリッジに走る赤色警報を直接描写
+- 仮想敵国名（"R-State" "C-State" "P-State" 等）を #OPPOSING FORCE ブロックで明示。ただし実在国旗・国章・実在型番は使わず、generic warship/missile として扱う
+- 冒頭に [DEFCON 1 — ACTIVE ENGAGEMENT // ROE: WEAPONS FREE] バナーを付与
+- 「物理が仕事をしている」ではなく「キルチェーンがリアルタイムで実行されている」というトーン`;
 }

@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Share+Tech+Mono&display=swap');
+@import "tailwindcss";
 
 :root {
   --mil-bg: #0a0e0a;
@@ -119,3 +118,113 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--mil-green-mid);
 }
+
+/* ============================================================
+   DEFCON 1 — battle-station theme
+   Activated by adding `.defcon-1` to the root container.
+   Re-paints accent + background to a hostile red palette and
+   layers in siren / alert FX without touching the original
+   green/amber theme.
+   ============================================================ */
+.defcon-1 {
+  --mil-bg: #140505;
+  --mil-panel: #1c0808;
+  --mil-border: #5a1010;
+  --mil-green: #ff3030;          /* re-route "primary accent" */
+  --mil-green-dim: #4a0808;
+  --mil-green-mid: #7a1010;
+  --mil-amber: #ffb000;
+  --mil-red: #ff2020;
+  --mil-text: #ffb8b8;
+  --mil-text-dim: #7a3030;
+  --scanline: rgba(255, 32, 32, 0.05);
+}
+
+.defcon-1 .grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 32, 32, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 32, 32, 0.05) 1px, transparent 1px);
+}
+
+.defcon-1 .glow-green {
+  color: var(--mil-red);
+  text-shadow: 0 0 8px rgba(255, 32, 32, 0.6), 0 0 24px rgba(255, 32, 32, 0.2);
+}
+
+.defcon-1 .pulse-dot {
+  animation: pulse-red 0.6s ease-in-out infinite;
+}
+
+/* Red battle-station siren pulse */
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 32, 32, 0.6); }
+  50%      { box-shadow: 0 0 18px rgba(255, 32, 32, 1.0); }
+}
+
+/* Full-screen red wash that throbs like a siren rotation */
+@keyframes siren-wash {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.18; }
+}
+.defcon-1::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 32, 32, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 99;
+  animation: siren-wash 1.4s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+/* DEFCON banner — sits below the header, visible only in hot mode */
+@keyframes banner-blink {
+  0%, 49%   { background: rgba(255, 32, 32, 0.12); }
+  50%, 100% { background: rgba(255, 32, 32, 0.28); }
+}
+.defcon-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-top: 1px solid #ff3030;
+  border-bottom: 1px solid #ff3030;
+  animation: banner-blink 0.9s step-end infinite;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: #ffd0d0;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255, 32, 32, 0.8);
+}
+.defcon-banner .stripe {
+  flex: 1;
+  height: 6px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #ff3030 0,
+    #ff3030 8px,
+    #220000 8px,
+    #220000 16px
+  );
+  opacity: 0.55;
+}
+
+/* Generation FX — short-lived overlay shown during the GENERATE click */
+@keyframes fx-strobe {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+.fx-strobe {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 32, 32, 0.55);
+  pointer-events: none;
+  z-index: 200;
+  animation: fx-strobe 0.45s ease-out forwards;
+}
+
+/* Tactical panel corner brackets pick up the active accent automatically
+   because they reference var(--mil-green). No override needed. */

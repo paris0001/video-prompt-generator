@@ -18,6 +18,8 @@ function App() {
   const [history, setHistory] = useState([])
   const [timing, setTiming] = useState(defaultTiming)
   const [mode, setMode] = useState('2part') // '2part' or 'single'
+  const [intensity, setIntensity] = useState('cool') // 'cool' = DEFCON 3 / 'hot' = DEFCON 1
+  const [fxKey, setFxKey] = useState(0) // bump to retrigger the strobe FX
 
   const handleRandom = useCallback(() => {
     const t = getRandomTheme()
@@ -35,42 +37,68 @@ function App() {
     const activeTheme = theme || {
       title: customTheme,
       stage: "海上",
-      color: "cold_ocean",
+      color: intensity === 'hot' ? "combat_red" : "cold_ocean",
       protagonist: "艦長",
     }
     const result = mode === 'single'
-      ? generateSinglePrompt(activeTheme, timing)
-      : generatePrompts(activeTheme, timing)
+      ? generateSinglePrompt(activeTheme, timing, intensity)
+      : generatePrompts(activeTheme, timing, intensity)
     setPrompts({ ...result, mode })
     setHistory(prev => [{ theme: activeTheme, prompts: { ...result, mode }, time: new Date() }, ...prev].slice(0, 10))
-  }, [theme, customTheme, timing, mode])
+    if (intensity === 'hot') setFxKey(k => k + 1)
+  }, [theme, customTheme, timing, mode, intensity])
 
   const handleCustomChange = useCallback((e) => {
     setCustomTheme(e.target.value)
     setTheme(null)
   }, [])
 
+  const isHot = intensity === 'hot'
+
   return (
-    <div className="min-h-screen scanlines grid-bg" style={{ background: 'var(--mil-bg)', color: 'var(--mil-text)' }}>
+    <div
+      className={`min-h-screen scanlines grid-bg${isHot ? ' defcon-1' : ''}`}
+      style={{ background: 'var(--mil-bg)', color: 'var(--mil-text)' }}
+    >
+      {/* DEFCON 1 strobe FX (one-shot, retriggered by fxKey) */}
+      {isHot && fxKey > 0 && <div key={fxKey} className="fx-strobe" />}
+
       {/* Header */}
-      <header className="sticky top-0 z-50" style={{ borderBottom: '1px solid var(--mil-green-dim)', background: 'rgba(10, 14, 10, 0.95)', backdropFilter: 'blur(8px)' }}>
+      <header className="sticky top-0 z-50" style={{ borderBottom: '1px solid var(--mil-green-dim)', background: isHot ? 'rgba(20, 5, 5, 0.95)' : 'rgba(10, 14, 10, 0.95)', backdropFilter: 'blur(8px)' }}>
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full pulse-dot" style={{ background: 'var(--mil-green)' }} />
               <div>
                 <h1 className="text-sm font-bold tracking-widest uppercase glow-green">
-                  TACTICAL PROMPT GENERATOR
+                  {isHot ? 'TACTICAL PROMPT GENERATOR // BATTLE STATIONS' : 'TACTICAL PROMPT GENERATOR'}
                 </h1>
                 <p className="text-[10px] tracking-wider uppercase mt-0.5" style={{ color: 'var(--mil-text-dim)' }}>
-                  MILITARY SHORT DRAMA // SYSTEM ONLINE
+                  {isHot
+                    ? 'DIRECT ENGAGEMENT MODE // ROE: WEAPONS FREE'
+                    : 'MILITARY SHORT DRAMA // SYSTEM ONLINE'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] tracking-wider" style={{ color: 'var(--mil-text-dim)' }}>
-                THEMES: 100 // STATUS: READY
+              <span className="text-[10px] tracking-wider" style={{ color: isHot ? '#ff7070' : 'var(--mil-text-dim)' }}>
+                {isHot ? 'THEMES: 115 // DEFCON 1 — ENGAGED' : 'THEMES: 115 // STATUS: READY'}
               </span>
+              {/* DEFCON intensity toggle */}
+              <button
+                onClick={() => setIntensity(isHot ? 'cool' : 'hot')}
+                title="Toggle DEFCON 1 — direct combat mode"
+                className="text-[10px] px-3 py-1.5 tracking-widest uppercase transition font-bold"
+                style={{
+                  border: `1px solid ${isHot ? '#ff3030' : 'var(--mil-green-dim)'}`,
+                  color: isHot ? '#ffd0d0' : 'var(--mil-text-dim)',
+                  background: isHot ? 'rgba(255,32,32,0.18)' : 'transparent',
+                  textShadow: isHot ? '0 0 6px rgba(255,32,32,0.8)' : 'none',
+                  letterSpacing: '0.2em',
+                }}
+              >
+                {isHot ? '⚠ DEFCON 1' : '◯ DEFCON 3'}
+              </button>
               <button
                 onClick={() => setShowTiming(!showTiming)}
                 className="text-[10px] px-3 py-1.5 tracking-wider uppercase transition font-medium"
@@ -100,13 +128,22 @@ function App() {
             </div>
           </div>
         </div>
+        {isHot && (
+          <div className="defcon-banner">
+            <span className="stripe" />
+            ⚠ DEFCON 1 — ACTIVE ENGAGEMENT // ROE: WEAPONS FREE ⚠
+            <span className="stripe" />
+          </div>
+        )}
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-5">
         {/* Command Input Panel */}
         <section className="tactical-panel p-5" style={{ border: '1px solid var(--mil-border)', background: 'var(--mil-panel)' }}>
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-[10px] tracking-widest uppercase glow-green">MISSION BRIEFING</span>
+            <span className="text-[10px] tracking-widest uppercase glow-green">
+              {isHot ? 'ENGAGEMENT BRIEFING — TARGET ACQUISITION' : 'MISSION BRIEFING'}
+            </span>
             <div className="flex-1 h-px" style={{ background: 'var(--mil-border)' }} />
           </div>
 
@@ -137,7 +174,7 @@ function App() {
                 onMouseEnter={e => { e.target.style.borderColor = 'var(--mil-green)'; e.target.style.color = 'var(--mil-green)' }}
                 onMouseLeave={e => { e.target.style.borderColor = 'var(--mil-border)'; e.target.style.color = 'var(--mil-text)' }}
               >
-                {showThemes ? '× CLOSE DB' : '◆ THEME DATABASE [100]'}
+                {showThemes ? '× CLOSE DB' : '◆ THEME DATABASE [115]'}
               </button>
             </div>
 
@@ -176,7 +213,7 @@ function App() {
                   type="text"
                   value={customTheme}
                   onChange={handleCustomChange}
-                  placeholder="ENTER MISSION THEME..."
+                  placeholder={isHot ? 'DESIGNATE TARGET — HOSTILE CONTACT...' : 'ENTER MISSION THEME...'}
                   className="w-full pl-7 pr-4 py-2.5 text-sm placeholder-opacity-30 focus:outline-none"
                   style={{
                     background: 'rgba(0, 255, 65, 0.03)',
@@ -193,12 +230,20 @@ function App() {
                 disabled={!customTheme.trim()}
                 className="px-6 py-2.5 text-xs tracking-wider uppercase font-bold transition"
                 style={{
-                  background: customTheme.trim() ? 'var(--mil-amber)' : 'var(--mil-green-dim)',
-                  border: '1px solid ' + (customTheme.trim() ? 'var(--mil-amber)' : 'var(--mil-border)'),
-                  color: customTheme.trim() ? '#000' : 'var(--mil-text-dim)',
+                  background: customTheme.trim()
+                    ? (isHot ? '#ff3030' : 'var(--mil-amber)')
+                    : 'var(--mil-green-dim)',
+                  border: '1px solid ' + (customTheme.trim()
+                    ? (isHot ? '#ff3030' : 'var(--mil-amber)')
+                    : 'var(--mil-border)'),
+                  color: customTheme.trim()
+                    ? (isHot ? '#fff' : '#000')
+                    : 'var(--mil-text-dim)',
+                  boxShadow: customTheme.trim() && isHot ? '0 0 18px rgba(255,32,32,0.6)' : 'none',
+                  textShadow: customTheme.trim() && isHot ? '0 0 6px rgba(0,0,0,0.6)' : 'none',
                 }}
               >
-                GENERATE ▶
+                {isHot ? 'FIRE ▶▶' : 'GENERATE ▶'}
               </button>
             </div>
 
@@ -254,7 +299,9 @@ function App() {
       {/* Footer */}
       <footer className="mt-auto py-3 text-center">
         <p className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--mil-text-dim)' }}>
-          CLASSIFICATION: UNCLASSIFIED // PROMPT GENERATION SYSTEM v1.0
+          {isHot
+            ? 'CLASSIFICATION: SECRET // ENGAGEMENT LOG ACTIVE — DO NOT DISTRIBUTE'
+            : 'CLASSIFICATION: UNCLASSIFIED // PROMPT GENERATION SYSTEM v1.1'}
         </p>
       </footer>
 
