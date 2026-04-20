@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { categories, getRandomTheme } from './data/themes'
+import { categories, getRandomTheme, totalThemeCount } from './data/themes'
 import { generatePrompts, generateSinglePrompt, generateSystemPrompt, defaultTiming } from './data/promptTemplates'
 import PromptOutput from './components/PromptOutput'
 import ThemeBrowser from './components/ThemeBrowser'
@@ -82,7 +82,7 @@ function App() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-[10px] tracking-wider" style={{ color: isHot ? '#ff7070' : 'var(--mil-text-dim)' }}>
-                {isHot ? 'THEMES: 115 // DEFCON 1 — ENGAGED' : 'THEMES: 115 // STATUS: READY'}
+                {isHot ? `THEMES: ${totalThemeCount} // DEFCON 1 — ENGAGED` : `THEMES: ${totalThemeCount} // STATUS: READY`}
               </span>
               {/* DEFCON intensity toggle */}
               <button
@@ -174,7 +174,7 @@ function App() {
                 onMouseEnter={e => { e.target.style.borderColor = 'var(--mil-green)'; e.target.style.color = 'var(--mil-green)' }}
                 onMouseLeave={e => { e.target.style.borderColor = 'var(--mil-border)'; e.target.style.color = 'var(--mil-text)' }}
               >
-                {showThemes ? '× CLOSE DB' : '◆ THEME DATABASE [115]'}
+                {showThemes ? '× CLOSE DB' : `◆ THEME DATABASE [${totalThemeCount}]`}
               </button>
             </div>
 

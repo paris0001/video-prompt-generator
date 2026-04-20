@@ -465,25 +465,40 @@ const intensityProfiles = {
   },
   hot: {
     label: 'DEFCON 1 — WEAPONS FREE',
-    narratorVoice: 'low, taut, controlled urgency — the voice of a man reading a war diary mid-engagement',
-    closingTone: 'Only ambient — alarm klaxons in the distance, hull groaning, distant impacts walking closer.',
-    silentTail: 'Silent hold. No music. Only the red emergency beacon strobing across the ${role} face. Slow fade to black.',
-    palette: 'combat_red', // override color grade
+    narratorVoice: 'low, taut, controlled urgency — the voice of a man reading a war diary mid-engagement, barely above the alarm klaxons',
+    closingTone: 'Only ambient — alarm klaxons layered over the hull groaning under near-miss overpressure, distant impacts walking closer, a damage-control team calling numbers in the passageway.',
+    silentTail: 'Silent hold. No music. Only the red emergency beacon strobing across the ${role} face — sweat, soot, a thin cut on the cheekbone untended. Slow fade to black as the next inbound salvo crests the horizon.',
+    palette: 'combat_red',
     combatScene1: (w, e) => {
-      const enemy = e || 'hostile force';
-      return w
-        ? `${w.name} commits to the engagement. Hatches blow open, capacitors discharge, autoloaders cycle. ${enemy.toUpperCase()} contacts inbound — bearing closing, range collapsing, time-to-merge under sixty seconds. The crew is no longer training. They are fighting.`
-        : `All combat stations active. ${enemy.toUpperCase()} contacts inbound — bearing closing, range collapsing. Weapons released. The crew is no longer training. They are fighting.`;
+      const enemy = (e || 'hostile force').toUpperCase();
+      const openings = [
+        `${w ? w.name + ' commits to the engagement. Hatches blow open, capacitors discharge, autoloaders cycle at max rate.' : 'All stations at battle condition. Safeties off, VLS cells armed, turrets tracking.'} ${enemy} first wave inbound — 40+ contacts on the scope, bearing closing, range collapsing, time-to-merge under forty seconds. The crew is no longer training. They are fighting.`,
+        `${w ? w.name + ' goes live mid-salvo. Second wave from ' + enemy + ' already in the air before the first impacts.' : 'Second wave from ' + enemy + ' in the air before the first impacts.'} CIC reports "vampire, vampire, vampire" — sea-skimmers popping over the horizon at Mach 0.9. Hands are moving faster than thought. The captain's voice holds flat. Nothing else does.`,
+        `Incoming. ${enemy} opened the engagement without warning — a saturation strike aimed at overwhelming the defensive envelope. ${w ? w.name + ' is the only system fast enough to thin it.' : 'Every defensive system on the ship is the only thing fast enough to thin it.'} Own-ship roll pitching under the pressure of near-misses. The deck is no longer a deck. It is a firing position.`,
+        `Contact broken, contact regained — ${enemy} is using chaff, jamming, and a decoy swarm to mask the real shooters. ${w ? w.name + ' cuts through it.' : 'Our sensors cut through it.'} Range is no longer safe. Range is a number falling every second, and the number on the display is smaller than the last time anyone had the nerve to look.`,
+        `${enemy} committed. The engagement window opened sixty seconds ago and will close in forty. ${w ? w.name + ' runs its kill-chain at machine speed — faster than any human could authorize each shot.' : 'Automated defenses run at machine speed — faster than any human could authorize each shot.'} Crew confirms, does not approve. The rate of fire is beyond the rate of thought.`,
+        `${w ? w.name + ' tracks thirty-plus simultaneous tracks.' : 'Thirty-plus simultaneous tracks on the primary display.'} ${enemy} is not probing. ${enemy} is committing everything in range — surface, sub-surface, air-launched, simultaneously. The tactical display blooms red from horizon to horizon. This is the engagement everyone rehearsed and no one believed would come.`,
+      ];
+      return openings[Math.floor(Math.random() * openings.length)];
     },
     combatScene2: (w, e) => {
-      const enemy = e || 'hostile force';
-      return w
-        ? `${w.name} engages. Tracer arc, missile bloom, heat-shimmer of expended cells. ${enemy.toUpperCase()} platform takes the hit — superstructure comes apart in slow-motion frames, secondaries cooking off. Counter-fire arrives — overpressure rocks the camera, shrapnel scars bulkheads, alarm panels strobe red across every face. This is not a demonstration. This is a kill chain executing in real time.`
-        : `The engagement closes. Outbound ordnance leaves the rail. ${enemy.toUpperCase()} platform takes the hit — secondaries cooking off, target dead in the water. Counter-fire arrives — overpressure rocks the camera, alarm panels strobe red across every face. This is not a demonstration. This is a kill chain executing in real time.`;
+      const enemy = (e || 'hostile force').toUpperCase();
+      const outbound = w
+        ? `${w.name} engages — tracer arc, missile bloom, heat-shimmer of expended cells, empty canisters tumbling off the rail`
+        : `Outbound ordnance leaves the rail — tracer arc, missile bloom, heat-shimmer of expended cells`;
+      const climaxes = [
+        `${outbound}. ${enemy} lead platform takes the hit — superstructure comes apart in slow-motion frames, magazine cookoff lighting the horizon for a full three seconds. Second wave arrives before the first target stops burning. Counter-fire comes in hot — a near-miss blooms twenty meters off the port quarter, overpressure rocks the camera, shrapnel scars the bulkhead beside the ${'${role}'} head, alarm panels strobe red across every face. Damage control calls "flooding contained, compartment sealed." The ${'${role}'} does not look. The ${'${role}'} reloads.`,
+        `${outbound}. Impact. ${enemy} platform number one dead in the water, platform two bleeding fuel and listing, platform three turning hard to run. But the third wave is already inbound — bearing 270, range thirty, closing at Mach 0.8. Own ship takes a hit amidships — a sub-sonic cruise missile punches through the superstructure, fireball climbing, secondaries going off in the hangar. Damage control on the run. Weapons crew on the rail. No one stops firing.`,
+        `${outbound}. Target neutralized. Target neutralized. Target — lost. The third contact kept coming through a direct hit and put a weapon in the water thirty meters off the bow. The hull rings like a bell. Half the CIC displays go dark, auxiliaries kick in, the ${'${role}'} calls the next target while smoke still rolls across his console. The kill chain is not broken. The kill chain does not break.`,
+        `${outbound}. First-round hits on the lead ${enemy} unit — the hull opens along a welded seam, magazine cooks off three seconds later, the entire bow section comes apart in the cold water. Counter-salvo from the trailing ${enemy} platforms — eight inbound, CIWS cycling, countermeasures in the air, a single leaker slips through and blooms against the aft VLS shield. Steel screaming. Men at their stations. The ${'${role}'} reports "weapons free, weapons free, continuing engagement" into a handset slick with blood that is not his own.`,
+        `${outbound}. ${enemy} formation breaks under the salvo — two platforms killed outright, one turning inside the envelope and taking a second round, the last opening range but not fast enough. Then the second front opens — a different axis, a different shooter, range zero-point-nine and already inside the outer engagement zone. The ${'${role}'} shifts to the new threat without looking up. Forty-eight seconds into the engagement. Sixty to live through. Every hand on the ship has work and is doing it.`,
+        `${outbound}. Direct hit. Second hit. Third. The lead ${enemy} element is gone — a vapor column where a warship used to be — but the next element is already launching from over the horizon. Own ship shudders under near-miss overpressure, a plate in the overhead cracks and rains paint chips across the ${'${role}'}. The ammo count on the primary display drops in readable increments: 64, 60, 56, 52. Every number is a platform that did not make it through, and a number that must still survive the next wave.`,
+      ];
+      return climaxes[Math.floor(Math.random() * climaxes.length)].replaceAll('${role}', 'officer');
     },
-    patrioticNote: `The line is here. There is no further line behind them. Every man at his station knows it. Hands do not shake. Voices do not rise. The work continues because no one is coming to do it for them.`,
-    openingBanner: `[DEFCON 1 — ACTIVE ENGAGEMENT // ROE: WEAPONS FREE]\n`,
-    closingMoral: `No metaphor. No abstraction. The threat closed the distance and the answer was returned in kind.`,
+    patrioticNote: `The line is here. There is no further line behind them. Every man at his station knows it. Hands do not shake. Voices do not rise. Damage control works the passageway, the CIC holds its tracks, the bridge holds its heading, and the work continues because no one else is coming to do it for them.`,
+    openingBanner: `[DEFCON 1 — ACTIVE ENGAGEMENT // ROE: WEAPONS FREE // SECOND WAVE INBOUND]\n`,
+    closingMoral: `No metaphor. No abstraction. The threat closed the distance and the answer was returned in kind — once, twice, and whatever came after, for as long as ammunition and nerve held.`,
   },
 };
 

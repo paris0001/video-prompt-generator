@@ -1,4 +1,6 @@
-export const categories = [
+import { buildBattleCategories } from './battleMatrix.js';
+
+const baseCategories = [
   {
     name: "レールガン・新兵器",
     icon: "🔫",
@@ -1002,8 +1004,13 @@ export const categories = [
   },
 ];
 
+export const categories = [...baseCategories, ...buildBattleCategories()];
+
 export function getRandomTheme() {
   const cat = categories[Math.floor(Math.random() * categories.length)];
   const theme = cat.themes[Math.floor(Math.random() * cat.themes.length)];
   return { ...theme, category: cat.name };
 }
+
+// Total theme count across all categories — for header display
+export const totalThemeCount = categories.reduce((sum, c) => sum + c.themes.length, 0);
