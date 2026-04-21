@@ -1,4 +1,5 @@
 import { buildBattleCategories } from './battleMatrix.js';
+import { frictionCategories } from './frictionScenarios.js';
 
 const baseCategories = [
   {
@@ -1004,7 +1005,7 @@ const baseCategories = [
   },
 ];
 
-export const categories = [...baseCategories, ...buildBattleCategories()];
+export const categories = [...baseCategories, ...frictionCategories, ...buildBattleCategories()];
 
 export function getRandomTheme() {
   const cat = categories[Math.floor(Math.random() * categories.length)];
